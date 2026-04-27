@@ -52,32 +52,30 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# 5. LÓGICA DE CÁLCULO
+# 5. LÓGICA DE CÁLCULO (REDONDEO FINAL A 1 DECIMAL)
 g_a_total = goles + asist
 if pj > 0:
     ga_rate = g_a_total / pj
     
-    # TPP (Redondeado a 1 decimal como quedamos)
+    # TPP (Redondeado a 1 decimal)
     tpp_bruto = (ga_rate * 10) / 7
     ajuste_exigencia = 4 / exigencia 
     tpp_final = round(tpp_bruto * ajuste_exigencia, 1)
     
-    # Bonus con Penalización por Inactividad (Mensual)
+    # Bonus con Penalización (Mensual)
     if periodo == "Mensual":
         if pj == 1: bonus = -0.50
         elif pj == 2: bonus = -0.25
         elif pj == 3: bonus = -0.10
         elif pj == 4: bonus = 0.0
         else:
-            # Progresión lineal desde el 5to partido hasta el 16vo
             bonus = round((pj / 16), 2)
     else:
-        # Lógica Temporada (Anual)
         val_bonus = ((pj * 2) / 48 if pj <= 48 else 2.0 + ((pj - 48) // 4) * 0.1)
         bonus = round(val_bonus, 2)
     
-    # Suma final con tope de 0 y 10
-    nota_final = round(tpp_final + bonus, 2)
+    # SUMA Y REDONDEO FINAL A 1 DECIMAL (Para evitar 5.58 -> 5.6)
+    nota_final = round(tpp_final + bonus, 1)
     nota_final = max(0.0, min(nota_final, 10.0))
 else:
     ga_rate = tpp_final = bonus = nota_final = 0.0
@@ -90,7 +88,7 @@ if pj > 0:
         if nota_final >= lim:
             status, color = nom, col
             if i > 0:
-                falta = round(niveles[i-1][0] - nota_final, 2)
+                falta = round(niveles[i-1][0] - nota_final, 1)
                 next_info = f"Estás a {falta} pts del nivel {niveles[i-1][1]}"
             break
 
