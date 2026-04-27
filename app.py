@@ -3,148 +3,106 @@ import streamlit as st
 # 1. CONFIGURACIÓN
 st.set_page_config(page_title="LOXT Stats Calculator", page_icon="⚽", layout="centered")
 
-# 2. SIDEBAR (Interruptor y Datos)
+# 2. INICIALIZACIÓN DE ESTADO (Para el botón de Reset)
+if 'reset' not in st.session_state:
+    st.session_state.reset = False
+
+def reset_values():
+    st.session_state.pj = 0
+    st.session_state.goles = 0
+    st.session_state.asist = 0
+    st.session_state.exigencia = 4.0
+
+# 3. SIDEBAR
 with st.sidebar:
-    st.markdown("<h3 style='font-size:1.2rem; margin-bottom:10px;'>CONFIGURACIÓN</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='font-size:1.2rem;'>DATA ENTRY</h3>", unsafe_allow_html=True)
+    modo_oscuro = st.toggle("Modo Noche", value=True)
+    st.markdown("---")
     
-    # Interruptor de Modo
-    modo_oscuro = st.toggle("Modo Oscuro", value=True)
+    exigencia = st.slider("Exigencia (Dificultad)", 1.0, 10.0, 4.0, step=0.5, key="exigencia")
+    periodo = st.radio("Cálculo para:", ["Mensual", "Temporada (Anual)"])
     
     st.markdown("---")
-    exigencia = st.slider("Nivel de Exigencia", 1.0, 10.0, 4.0, step=0.5)
-    periodo = st.radio("Periodo:", ["Mensual", "Temporada"])
-    pj = st.number_input("Partidos (PJ)", min_value=0, step=1)
-    goles = st.number_input("Goles", min_value=0, step=1)
-    asist = st.number_input("Asistencias", min_value=0, step=1)
+    pj = st.number_input("Partidos Jugados (PJ)", min_value=0, step=1, key="pj")
+    goles = st.number_input("Goles", min_value=0, step=1, key="goles")
+    asist = st.number_input("Asistencias", min_value=0, step=1, key="asist")
+    
+    st.markdown("---")
+    if st.button("♻️ Limpiar Todo", on_click=reset_values, use_container_width=True):
+        st.rerun()
 
-# 3. ESTILOS DINÁMICOS Y FIX DE CONTRASTE
+# 4. ESTILOS CSS
 if modo_oscuro:
-    bg_gradient = "linear-gradient(135deg, #001a33 0%, #004d40 100%)"
-    sidebar_bg = "#001a33" # Forzado para modo oscuro
-    text_color_main = "#ffffff"
-    card_bg = "rgba(0, 0, 0, 0.4)"
-    metric_bg = "rgba(255, 255, 255, 0.08)"
-    wave_color = "rgba(0,255,150,0.03)"
+    bg, side, txt, card, met = ("linear-gradient(135deg, #001a33 0%, #004d40 100%)", "#001a33", "#ffffff", "rgba(0,0,0,0.4)", "rgba(255,255,255,0.08)")
 else:
-    # Modo Claro: Pasteles cálidos
-    bg_gradient = "linear-gradient(135deg, #fff9c4 0%, #ffecb3 50%, #ffccbc 100%)"
-    sidebar_bg = "#fff9c4" # Forzado para modo claro
-    text_color_main = "#2c3e50"
-    card_bg = "rgba(255, 255, 255, 0.6)"
-    metric_bg = "rgba(0, 0, 0, 0.05)"
-    wave_color = "rgba(255, 100, 100, 0.05)"
+    bg, side, txt, card, met = ("linear-gradient(135deg, #fff9c4 0%, #ffecb3 50%, #ffccbc 100%)", "#fff9c4", "#2c3e50", "rgba(255,255,255,0.6)", "rgba(0,0,0,0.05)")
 
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-
-    /* Fondo de la App */
-    .stApp {{
-        background: {bg_gradient};
-        background-attachment: fixed;
-    }}
-    
-    /* FORZAR FONDO DE SIDEBAR (Esto arregla el problema en PC y Móvil) */
-    section[data-testid="stSidebar"] {{
-        background-color: {sidebar_bg} !important;
-    }}
-    
-    /* Ondas difuminadas */
-    .stApp::before {{
-        content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: radial-gradient(circle at center, {wave_color} 0%, transparent 60%);
-        filter: blur(60px); animation: waves 15s infinite alternate; z-index: -1;
-    }}
-
-    @keyframes waves {{
-        from {{ transform: translate(-5%, -5%) rotate(0deg); }}
-        to {{ transform: translate(5%, 5%) rotate(3deg); }}
-    }}
-
-    /* Forzar colores de texto en toda la interfaz */
-    .stApp, p, span, label, h1, h2, h3, 
-    div[data-testid="stMetricLabel"] > div, 
-    section[data-testid="stSidebar"] .stText {{
-        color: {text_color_main} !important;
-    }}
-
-    /* Ajuste de Cuadros de Métricas */
-    div[data-testid="stMetric"] {{
-        background-color: {metric_bg} !important;
-        border: 1px solid rgba(0,0,0,0.05) !important;
-        border-radius: 12px !important;
-        text-align: center !important;
-        padding: 15px !important;
-    }}
-
-    div[data-testid="stMetricValue"] > div {{
-        color: {text_color_main} !important;
-        font-weight: 800 !important; 
-        font-size: 1.8rem !important;
-        display: flex; justify-content: center;
-    }}
-
-    div[data-testid="stMetricLabel"] > div {{
-        display: flex; justify-content: center; width: 100%;
-    }}
-
-    .nota-card {{
-        background: {card_bg}; border-radius: 15px; padding: 20px;
-        border: 1px solid rgba(0,0,0,0.1); text-align: center; margin-top: 15px;
-    }}
-
-    .nota-valor {{
-        font-size: 3.8rem !important; font-weight: 900 !important;
-        margin: 5px 0; line-height: 1;
-    }}
+    .stApp {{ background: {bg}; background-attachment: fixed; }}
+    section[data-testid="stSidebar"] {{ background-color: {side} !important; }}
+    .stApp, p, span, label, h1, h3, div[data-testid="stMetricLabel"] > div {{ color: {txt} !important; }}
+    div[data-testid="stMetric"] {{ background-color: {met} !important; border-radius: 12px; text-align: center; padding: 15px; border: 1px solid rgba(0,0,0,0.05); }}
+    div[data-testid="stMetricValue"] > div {{ color: {txt} !important; font-weight: 800; font-size: 1.8rem; display: flex; justify-content: center; }}
+    .nota-card {{ background: {card}; border-radius: 15px; padding: 20px; text-align: center; margin-top: 15px; border: 1px solid rgba(0,0,0,0.1); backdrop-filter: blur(5px); }}
+    .nota-valor {{ font-size: 4rem !important; font-weight: 900; margin: 0; line-height: 1; }}
+    .proximo-nivel {{ font-size: 0.85rem; font-style: italic; opacity: 0.8; margin-top: 10px; }}
     </style>
     """, unsafe_allow_html=True)
 
-# 4. LÓGICA DE CÁLCULO
+# 5. LÓGICA DE CÁLCULO
 g_a_total = goles + asist
-if pj > 0 and g_a_total > 0:
-    ga_rate = g_a_total / pj
-    tpp = (ga_rate * 10) / (exigencia * 1.75 / 4) 
-    bono = min(pj / 16, 1.0) if periodo == "Mensual" else ((pj * 2) / 48 if pj <= 48 else 2.0 + ((pj - 48) // 4) * 0.1)
-    nota_final = min(tpp + bono, 10.0)
-else:
-    ga_rate = tpp = bono = nota_final = 0.0
-
-# 5. STATUS Y COLORES
 if pj > 0:
-    if nota_final >= 10.0:
-        status_name, color = "LEYENDA", "#9d4edd"
-    elif nota_final >= 8.0:
-        status_name = "TOP"
-        color = "#ffffff" if modo_oscuro else "#2c3e50"
-    elif nota_final >= 6.0:
-        status_name, color = "IDEAL", "#4db6ac"
-    elif nota_final >= 5.0:
-        status_name, color = "APROBADO", "#81c784"
-    elif nota_final >= 1.0:
-        status_name, color = "REPROBADO", "#e57373"
-    else:
-        status_name, color = "RENDIMIENTO NULO", "#ff5252"
+    ga_rate = g_a_total / pj
+    meta_pro = exigencia / 4 
+    tpp_base = (ga_rate * 7) / meta_pro
+    tpp_final = min(tpp_base, 10.0)
+    bonus = min(pj / 16, 1.0) if periodo == "Mensual" else ((pj * 2) / 48 if pj <= 48 else 2.0 + ((pj - 48) // 4) * 0.1)
+    nota_final = round(min(tpp_final + bonus, 10.0), 1)
 else:
-    status_name, color = "SIN DATOS", "#546e7a"
+    ga_rate = tpp_base = bonus = nota_final = 0.0
 
-# 6. INTERFAZ
-st.markdown(f"<h1 style='text-align:center;'>LOXT STATS CALCULATOR</h1>", unsafe_allow_html=True)
+# 6. STATUS Y FEEDBACK DE NIVEL
+niveles = [
+    (10.0, "LEYENDA", "#9d4edd"),
+    (8.0, "TOP", "#ffffff" if modo_oscuro else "#2c3e50"),
+    (6.0, "IDEAL", "#4db6ac"),
+    (5.0, "APROBADO", "#81c784"),
+    (1.0, "REPROBADO", "#e57373"),
+    (0.0, "RENDIMIENTO NULO", "#ff5252")
+]
+
+status, color, next_info = "SIN DATOS", "#78909c", ""
+if pj > 0:
+    for i, (limite, nombre, col) in enumerate(niveles):
+        if nota_final >= limite:
+            status, color = nombre, col
+            if i > 0: # Si no es LEYENDA, calcular cuánto falta para el nivel superior
+                falta = round(niveles[i-1][0] - nota_final, 1)
+                next_info = f"Estás a {falta} pts del nivel {niveles[i-1][1]}"
+            break
+
+# 7. INTERFAZ PRINCIPAL
+st.markdown("<h1 style='text-align:center; letter-spacing: 2px;'>LOXT STATS CALCULATOR</h1>", unsafe_allow_html=True)
 
 c1, c2, c3 = st.columns(3)
 c1.metric("G/A RATE", f"{ga_rate:.2f}")
-c2.metric("TPP (NOTA BASE)", f"{min(tpp, 10.0):.1f}")
-c3.metric("BONUS", f"{bono:.2f}")
+c2.metric("TPP (BASE)", f"{tpp_base:.2f}")
+c3.metric("BONUS", f"{bonus:.2f}")
 
 st.markdown(f"""
     <div class='nota-card'>
         <p style='font-weight:bold; margin:0; font-size:0.8rem; opacity: 0.7;'>VALORACIÓN FINAL</p>
-        <p class='nota-valor' style='color:{color};'>{nota_final:.1f}</p>
+        <p class='nota-valor' style='color:{color};'>{nota_final}</p>
+        <div style="width: 100%; background-color: rgba(0,0,0,0.1); border-radius: 20px; margin: 15px 0;">
+            <div style="width: {nota_final*10}%; background-color: {color}; height: 14px; border-radius: 20px; transition: 0.8s;"></div>
+        </div>
+        <p style='font-weight:900; color:{color}; font-size:1.4rem; letter-spacing:3px; margin:0;'>{status}</p>
+        <p class='proximo-nivel'>{next_info}</p>
     </div>
-    <div style="width: 100%; background-color: rgba(0,0,0,0.1); border-radius: 10px; margin-top: 10px;">
-        <div style="width: {nota_final*10}%; background-color: {color}; height: 12px; border-radius: 10px; transition: 0.5s;"></div>
-    </div>
-    <p style='margin-top:15px; font-weight:900; color:{color}; font-size:1.3rem; text-align:center;'>
-        STATUS: {status_name}
-    </p>
     """, unsafe_allow_html=True)
+
+# 8. FUNCIÓN DE COPIADO (Formateado de texto)
+if pj > 0:
+    resumen = f"⚽ LOXT Stats: {pj} PJ | {nota_final} Valoración | Status: {status}"
+    st.text_input("Copia tu resultado:", value=resumen, help="Haz clic para seleccionar y copiar")
