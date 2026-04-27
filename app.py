@@ -3,15 +3,11 @@ import streamlit as st
 # 1. CONFIGURACIÓN DE LA PÁGINA
 st.set_page_config(page_title="LOXT Stats Calculator", page_icon="⚽", layout="centered")
 
-# 2. INICIALIZACIÓN DE ESTADO (Para el botón de Reset)
-if 'pj' not in st.session_state:
-    st.session_state.pj = 0
-if 'goles' not in st.session_state:
-    st.session_state.goles = 0
-if 'asist' not in st.session_state:
-    st.session_state.asist = 0
-if 'exigencia' not in st.session_state:
-    st.session_state.exigencia = 4.0
+# 2. INICIALIZACIÓN DE ESTADO
+if 'pj' not in st.session_state: st.session_state.pj = 0
+if 'goles' not in st.session_state: st.session_state.goles = 0
+if 'asist' not in st.session_state: st.session_state.asist = 0
+if 'exigencia' not in st.session_state: st.session_state.exigencia = 4.0
 
 def reset_values():
     st.session_state.pj = 0
@@ -37,7 +33,7 @@ with st.sidebar:
     if st.button("♻️ Limpiar Todo", on_click=reset_values, use_container_width=True):
         st.rerun()
 
-# 4. ESTILOS DINÁMICOS Y FIX DE CONTRASTE
+# 4. ESTILOS DINÁMICOS
 if modo_oscuro:
     bg, side, txt, card, met = ("linear-gradient(135deg, #001a33 0%, #004d40 100%)", "#001a33", "#ffffff", "rgba(0,0,0,0.4)", "rgba(255,255,255,0.08)")
 else:
@@ -56,39 +52,38 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# 5. LÓGICA DE CÁLCULO (REDONDEO ESTRATÉGICO)
+# 5. LÓGICA DE CÁLCULO
 g_a_total = goles + asist
 if pj > 0:
     ga_rate = g_a_total / pj
     
-    # TPP: (Rate * 10) / 7 -> Redondeado a 1 decimal (Ej: 7.857 -> 7.9)
+    # TPP (Redondeado a 1 decimal como quedamos)
     tpp_bruto = (ga_rate * 10) / 7
     ajuste_exigencia = 4 / exigencia 
     tpp_final = round(tpp_bruto * ajuste_exigencia, 1)
     
-    # Bonus: Redondeado a 2 decimales (Ej: 4/16 -> 0.25)
+    # Bonus con Penalización por Inactividad (Mensual)
     if periodo == "Mensual":
-        bonus = round(pj / 16, 2)
+        if pj == 1: bonus = -0.50
+        elif pj == 2: bonus = -0.25
+        elif pj == 3: bonus = -0.10
+        elif pj == 4: bonus = 0.0
+        else:
+            # Progresión lineal desde el 5to partido hasta el 16vo
+            bonus = round((pj / 16), 2)
     else:
+        # Lógica Temporada (Anual)
         val_bonus = ((pj * 2) / 48 if pj <= 48 else 2.0 + ((pj - 48) // 4) * 0.1)
         bonus = round(val_bonus, 2)
     
-    # Suma final (7.9 + 0.25 = 8.15)
+    # Suma final con tope de 0 y 10
     nota_final = round(tpp_final + bonus, 2)
-    if nota_final > 10.0: nota_final = 10.0
+    nota_final = max(0.0, min(nota_final, 10.0))
 else:
     ga_rate = tpp_final = bonus = nota_final = 0.0
 
 # 6. STATUS Y PROXIMIDAD
-niveles = [
-    (10.0, "LEYENDA", "#9d4edd"),
-    (8.0, "TOP", "#ffffff" if modo_oscuro else "#2c3e50"),
-    (6.0, "IDEAL", "#4db6ac"),
-    (5.0, "APROBADO", "#81c784"),
-    (1.0, "REPROBADO", "#e57373"),
-    (0.0, "RENDIMIENTO NULO", "#ff5252")
-]
-
+niveles = [(10.0, "LEYENDA", "#9d4edd"), (8.0, "TOP", "#ffffff" if modo_oscuro else "#2c3e50"), (6.0, "IDEAL", "#4db6ac"), (5.0, "APROBADO", "#81c784"), (1.0, "REPROBADO", "#e57373"), (0.0, "RENDIMIENTO NULO", "#ff5252")]
 status, color, next_info = "ESPERANDO DATOS", "#78909c", ""
 if pj > 0:
     for i, (lim, nom, col) in enumerate(niveles):
@@ -99,9 +94,8 @@ if pj > 0:
                 next_info = f"Estás a {falta} pts del nivel {niveles[i-1][1]}"
             break
 
-# 7. INTERFAZ PRINCIPAL
+# 7. INTERFAZ
 st.markdown("<h1 style='text-align:center; letter-spacing: 2px;'>LOXT STATS CALCULATOR</h1>", unsafe_allow_html=True)
-
 c1, c2, c3 = st.columns(3)
 c1.metric("G/A RATE", f"{ga_rate:.2f}")
 c2.metric("TPP (BASE)", f"{tpp_final}")
@@ -112,7 +106,7 @@ st.markdown(f"""
         <p style='font-weight:bold; margin:0; font-size:0.8rem; opacity: 0.7;'>VALORACIÓN FINAL</p>
         <p class='nota-valor' style='color:{color};'>{nota_final}</p>
         <div style='width: 100%; background-color: rgba(0,0,0,0.1); border-radius: 20px; margin: 15px 0;'>
-            <div style='width: {nota_final*10}%; background-color: {color}; height: 14px; border-radius: 20px; transition: 0.8s;'></div>
+            <div style='width: {nota_final*10}%; background-color: {color}; height: 14px; border-radius: 20px;'></div>
         </div>
         <p style='font-weight:900; color:{color}; font-size:1.4rem; letter-spacing:3px; margin:0;'>{status}</p>
         <p class='proximo-nivel'>{next_info}</p>
