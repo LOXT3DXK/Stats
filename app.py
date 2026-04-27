@@ -22,15 +22,20 @@ if pj > 0 and g_a_total > 0:
     ga_rate = g_a_total / pj
     tpp = (ga_rate * 10) / 7
     
-    # Cálculo del Bono
+    # Cálculo del Bono con límites estrictos
     if modo == "Mensual":
-        bono = pj / 16
+        # Bono mensual máximo de 1.0
+        bono = min(pj / 16, 1.0)
         tipo_bono = "BR M"
     else:
+        # Lógica de Temporada / Anual
         if pj <= 48:
+            # Bono base hasta 2.0
             bono = (pj * 2) / 48
         else:
-            bono = 2.0 + ((pj - 48) // 4) * 0.1
+            # 2.0 base + 0.1 por cada 4 partidos extra
+            extra = ((pj - 48) // 4) * 0.1
+            bono = 2.0 + extra
         tipo_bono = "BR T"
     
     # Nota final topada en 10.0
@@ -38,7 +43,7 @@ if pj > 0 and g_a_total > 0:
     comentario_extra = ""
 
 else:
-    # Si PJ es 0 o G+A es 0, todo es cero
+    # Si PJ es 0 o G+A es 0, todo es cero absoluto
     ga_rate = 0.0
     tpp = 0.0
     bono = 0.0
@@ -59,14 +64,14 @@ with col3:
 st.markdown("---")
 st.subheader(f"Resultado Final: {tipo_bono}")
 
-# Mostrar nota
+# Mostrar nota con estilo profesional
 if nota_final == 0 and pj > 0:
     st.title(f"💀 {round(nota_final, 1)}")
     st.error(comentario_extra)
 else:
     st.title(f"⭐ {round(nota_final, 1)}")
 
-# Feedback visual
+# Feedback visual de rendimiento
 if nota_final >= 9.0:
     st.success("¡Rendimiento de Élite Mundial!")
 elif nota_final >= 7.0:
@@ -74,4 +79,4 @@ elif nota_final >= 7.0:
 elif nota_final >= 5.0:
     st.info("Rendimiento Aceptable.")
 elif pj > 0:
-    st.error("Rendimiento insuficiente para aprobar.")
+    st.error("Rendimiento insuficiente (Reprobado).")
