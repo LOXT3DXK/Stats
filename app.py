@@ -1,69 +1,79 @@
 import streamlit as st
 
 # 1. CONFIGURACIÓN
-st.set_page_config(page_title="LOXT Performance", page_icon="⚽", layout="centered")
+st.set_page_config(page_title="LOXT Performance Hub", page_icon="⚽", layout="centered")
 
-# 2. CSS: Estética Pro y Compactación de Sidebar
+# 2. CSS: Ondas difuminadas, Colores Dinámicos y Layout
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
+    /* Fondo con Ondas Difuminadas (Azul a Verde) */
     .stApp {
-        background: linear-gradient(180deg, #4da3ff 0%, #00264d 50%, #000814 100%) !important;
-        color: #ffffff !important;
-        font-family: 'Inter', sans-serif !important;
+        background: linear-gradient(135deg, #001a33 0%, #004d40 100%);
+        background-attachment: fixed;
+        overflow: hidden;
+    }
+    
+    .stApp::before {
+        content: "";
+        position: absolute;
+        top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle at center, rgba(0,255,150,0.05) 0%, transparent 50%);
+        filter: blur(80px);
+        animation: waves 20s infinite alternate;
+        z-index: -1;
     }
 
-    /* Sidebar sin scroll y compacta */
+    @keyframes waves {
+        from { transform: translate(-10%, -10%) rotate(0deg); }
+        to { transform: translate(10%, 10%) rotate(5deg); }
+    }
+
+    /* Sidebar Compacta */
     [data-testid="stSidebar"] {
-        background-color: rgba(0, 0, 0, 0.2) !important;
-        width: 250px !important;
+        background-color: rgba(0, 0, 0, 0.3) !important;
+        backdrop-filter: blur(10px);
     }
-    [data-testid="stSidebar"] .block-container {
-        padding-top: 1.5rem !important;
-        padding-bottom: 0rem !important;
-    }
-    div.stNumberInput, div.stRadio, div.stSlider {
-        margin-bottom: -15px !important;
-    }
+    [data-testid="stSidebar"] .block-container { padding-top: 1.5rem !important; }
+    div.stNumberInput, div.stRadio, div.stSlider { margin-bottom: -15px !important; }
 
-    /* Zona Principal */
+    /* Cuadros de Métricas */
     div[data-testid="stMetric"] {
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 8px !important;
-        padding: 10px !important; 
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
+        padding: 15px !important;
     }
 
+    /* Textos Principales en Blanco */
     div[data-testid="stMetricValue"] > div {
-        font-size: 1.6rem !important;
-        font-weight: 800 !important;
+        color: #ffffff !important;
+        font-weight: 900 !important;
+        font-size: 1.8rem !important;
+    }
+    
+    div[data-testid="stMetricLabel"] > div {
+        color: rgba(255,255,255,0.8) !important;
+        font-size: 0.8rem !important;
+        letter-spacing: 1px;
     }
 
+    /* Contenedor de Valoración Final */
     .nota-card {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 15px;
-        padding: 20px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 20px;
+        padding: 25px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         text-align: center;
-        margin-top: 10px;
+        margin-top: 20px;
+        backdrop-filter: blur(5px);
     }
 
     .nota-valor {
-        font-size: 3.5rem !important;
+        font-size: 4rem !important;
         font-weight: 900 !important;
         margin: 5px 0;
-    }
-
-    h1 {
-        font-size: 1.5rem !important;
-        margin-bottom: 1rem !important;
-        text-align: center;
-    }
-
-    .stProgress > div > div > div > div {
-        background-color: #ffffff !important;
-        height: 8px !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -71,71 +81,17 @@ st.markdown("""
 # 3. SIDEBAR (Data Entry)
 with st.sidebar:
     st.markdown("<h3 style='color:white; font-size:1.1rem;'>DATA ENTRY</h3>", unsafe_allow_html=True)
-    
     exigencia = st.slider("Nivel de Exigencia", 1.0, 10.0, 4.0, step=0.5)
     modo = st.radio("Periodo:", ["Mensual", "Temporada"])
-    
     st.markdown("---")
-    
     pj = st.number_input("Partidos (PJ)", min_value=0, step=1)
     goles = st.number_input("Goles", min_value=0, step=1)
     asist = st.number_input("Asistencias", min_value=0, step=1)
 
 # 4. LÓGICA DE CÁLCULO
 g_a_total = goles + asist
-
 if pj > 0 and g_a_total > 0:
     ga_rate = g_a_total / pj
-    # Ajuste proporcional a la exigencia (Meta de G/A para alcanzar el 7.0 base)
     tpp = (ga_rate * 10) / (exigencia * 1.75 / 4) 
-    
-    if modo == "Mensual":
-        bono = min(pj / 16, 1.0)
-    else:
-        bono = (pj * 2) / 48 if pj <= 48 else 2.0 + ((pj - 48) // 4) * 0.1
-    
-    nota_final = min(tpp + bono, 10.0)
-else:
-    ga_rate = bono = nota_final = 0.0
-
-# 5. INTERFAZ PRINCIPAL
-st.title("LOXT PERFORMANCE HUB")
-
-col1, col2, col3 = st.columns(3)
-col1.metric("G/A RATE", f"{ga_rate:.2f}")
-col2.metric("META G/A", f"{exigencia}")
-col3.metric(f"BONO", f"{bono:.2f}")
-
-# Contenedor de la Nota Final
-st.markdown("<div class='nota-card'>", unsafe_allow_html=True)
-st.markdown(f"<p style='color:#b3d9ff; font-weight:bold; margin:0; font-size:0.8rem;'>VALORACIÓN FINAL</p>", unsafe_allow_html=True)
-st.markdown(f'<p class="nota-valor">{nota_final:.1f}</p>', unsafe_allow_html=True)
-
-st.progress(int(nota_final * 10))
-
-# 6. ESCALA DE RENDIMIENTO (Corrección de SyntaxError)
-if pj > 0:
-    if nota_final >= 10.0:
-        status = "LEYENDA"
-        color = "#ffffff"
-    elif nota_final >= 8.0:
-        status = "TOP"
-        color = "#81d4fa"
-    elif nota_final >= 6.0:
-        status = "INCREÍBLE RENDIMIENTO"
-        color = "#4db6ac"
-    elif nota_final >= 5.0:
-        status = "APROBADO"
-        color = "#aed581"
-    elif nota_final >= 1.0:
-        status = "REPROBADO"
-        color = "#ff8a65"
-    else:
-        status = "RENDIMIENTO NULO"
-        color = "#ff5252"
-    
-    st.markdown(f"<p style='margin-top:15px; font-weight:900; color:{color}; font-size:1.2rem;'>STATUS: {status}</p>", unsafe_allow_html=True)
-else:
-    st.markdown("<p style='margin-top:15px; color:grey;'>Esperando datos de partidos...</p>", unsafe_allow_html=True)
-
-st.markdown("</div>", unsafe_allow_html=True)
+    bono = min(pj / 16, 1.0) if modo == "Mensual" else ((pj * 2) / 48 if pj <= 48 else 2.0 + ((pj - 48) // 4) * 0.1)
+    nota_
