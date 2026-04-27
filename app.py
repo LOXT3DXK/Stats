@@ -2,106 +2,109 @@ import streamlit as st
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
-    page_title="LOXT Stats Pro", 
+    page_title="LOXT Stats Analyzer", 
     page_icon="⚽",
     layout="centered"
 )
 
-# 2. CSS: Estilo Deep Blue Futurista y Compacto
+# 2. CSS: Degradado, Espaciado y Sidebar Compacta
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
-    /* Fondo Degradado Azul Oscuro */
+    /* Fondo: Degradado de Azul Claro a Oscuro */
     .stApp {
-        background: linear-gradient(180deg, #001a33 0%, #000814 100%) !important;
+        background: linear-gradient(180deg, #4da3ff 0%, #00264d 50%, #000814 100%) !important;
         color: #ffffff !important;
         font-family: 'Inter', sans-serif !important;
     }
 
-    /* Barra Lateral unificada */
+    /* Sidebar: Más pequeña y sin scroll interno */
     [data-testid="stSidebar"] {
-        background-color: rgba(0, 26, 51, 0.95) !important;
-        border-right: 1px solid #003366;
-    }
-
-    /* Títulos */
-    h1 {
-        font-family: 'Inter', sans-serif !important;
-        font-weight: 900 !important;
-        font-size: 1.6rem !important;
-        color: #ffffff !important;
-        text-align: center;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        margin-bottom: 1rem !important;
-    }
-
-    /* Cuadros de Métricas Futuristas */
-    div[data-testid="stMetric"] {
         background-color: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid #004080 !important;
-        border-radius: 10px !important;
-        padding: 10px !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        width: 260px !important;
+    }
+    
+    [data-testid="stSidebar"] .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 0rem !important;
     }
 
+    /* Ajuste de espaciado para que no estén tan juntos */
+    div[data-testid="stMetric"] {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 12px !important;
+        padding: 20px !important; /* Más aire interno */
+        margin-bottom: 15px !important;
+    }
+
+    /* Números de métricas grandes y claros */
     div[data-testid="stMetricValue"] > div {
         font-family: 'Inter', sans-serif !important;
-        font-weight: 700 !important;
-        font-size: 1.8rem !important;
+        font-weight: 900 !important;
+        font-size: 2.2rem !important;
         color: #ffffff !important;
     }
 
-    /* Contenedor de Nota Final */
+    /* Tarjeta de Nota Final */
     .nota-card {
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 15px;
-        padding: 15px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 20px;
+        padding: 30px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         text-align: center;
-        margin-top: 10px;
+        margin-top: 25px;
     }
 
     .nota-valor {
-        font-size: 3.5rem !important;
+        font-size: 4.5rem !important;
         font-weight: 900 !important;
         color: #ffffff !important;
-        line-height: 1;
-        margin: 5px 0;
+        margin: 10px 0;
+        text-shadow: 0px 4px 10px rgba(0,0,0,0.3);
     }
 
-    /* Compactación */
-    .block-container {
-        padding-top: 1.5rem !important;
-        padding-bottom: 1rem !important;
+    /* Títulos con más espacio */
+    h1 {
+        font-size: 2rem !important;
+        letter-spacing: 2px;
+        margin-bottom: 2rem !important;
+    }
+
+    /* Personalización de la barra de progreso */
+    .stProgress > div > div > div > div {
+        background-color: #4da3ff !important;
+        height: 12px !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. SIDEBAR (Data Entry con Exigencia)
+# 3. SIDEBAR (Data Entry Compacto)
 with st.sidebar:
-    st.markdown("<h2 style='color:white; font-size:1.2rem;'>CONFIGURACIÓN</h2>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color:white; margin-bottom:20px;'>DATA ENTRY</h3>", unsafe_allow_html=True)
     
-    # NUEVA OPCIÓN: Nivel de Exigencia
-    exigencia = st.slider("Exigencia (G/A para el 7.0):", 1.0, 10.0, 4.0, step=0.5)
+    # Texto simplificado por petición del usuario
+    exigencia = st.slider("Nivel de Exigencia", 1.0, 10.0, 4.0, step=0.5)
     
-    st.markdown("---")
+    st.divider()
+    
     modo = st.radio("Periodo:", ["Mensual", "Temporada"])
-    pj = st.number_input("Partidos (PJ)", min_value=0, step=1)
-    goles = st.number_input("Goles", min_value=0, step=1)
-    asist = st.number_input("Asistencias", min_value=0, step=1)
+    pj = st.number_input("Partidos (PJ)", min_value=0, step=1, key="pj")
+    goles = st.number_input("Goles", min_value=0, step=1, key="goles")
+    asist = st.number_input("Asistencias", min_value=0, step=1, key="asist")
 
-# 4. LÓGICA DE CÁLCULO DINÁMICA
+# 4. LÓGICA DE CÁLCULO
 g_a_total = goles + asist
 
 if pj > 0 and g_a_total > 0:
     ga_rate = g_a_total / pj
     
-    # El TPP ahora es relativo a la exigencia elegida
-    # Antes: (ga_rate * 10) / 7 -> Asumía que 0.7 era el 1.0 de nota base (aprox 4.9 de 7)
-    # Ahora: Ajustamos para que alcanzar la 'exigencia' promedio por partido dé un 7.0 base
-    tpp = (ga_rate * 7) / (exigencia / pj if pj > 0 else 1) # Simplificado para que escale con la meta
-    tpp = (ga_rate * 10) / (exigencia * 1.75 / 4) # Ajuste proporcional a tu regla original de 4 G/A
+    # Ajuste proporcional basado en la meta de exigencia elegida
+    # Si ga_rate es igual a (exigencia/pj), la nota base es 7.0
+    objetivo_por_partido = exigencia / pj if pj > 0 else 1
+    tpp = (ga_rate * 7) / objetivo_por_partido
     
     if modo == "Mensual":
         bono = min(pj / 16, 1.0)
@@ -118,25 +121,25 @@ else:
 # 5. INTERFAZ PRINCIPAL
 st.title("LOXT PERFORMANCE HUB")
 
-# Métricas
-c1, c2, c3 = st.columns(3)
-c1.metric("G/A RATE", f"{ga_rate:.2f}")
-c2.metric("META G/A", f"{exigencia}")
-c3.metric(f"BONO {modo[0]}", f"{bono:.2f}")
+# Cuadros de métricas con más separación
+col1, col2, col3 = st.columns(3)
+col1.metric("G/A RATE", f"{ga_rate:.2f}")
+col2.metric("META ACTUAL", f"{exigencia}")
+col3.metric(f"BONO {modo[0]}", f"{bono:.2f}")
 
-# Tarjeta de Nota Final
+# Contenedor de la Nota Final
 st.markdown("<div class='nota-card'>", unsafe_allow_html=True)
-st.markdown(f"<p style='color:#81d4fa; font-weight:bold; margin:0; letter-spacing:2px;'>VALORACIÓN FINAL</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='color:#b3d9ff; font-weight:bold; margin:0; letter-spacing:3px;'>VALORACIÓN DEL RENDIMIENTO</p>", unsafe_allow_html=True)
 st.markdown(f'<p class="nota-valor">{nota_final:.1f}</p>', unsafe_allow_html=True)
 
-# Barra de Progreso
+# Barra de progreso más gruesa
 st.progress(int(nota_final * 10))
 
-# Status
+# Status final
 if pj > 0:
-    if nota_final >= 9.0: status = "NIVEL LEYENDA"
-    elif nota_final >= exigencia + 2: status = "ÉLITE PRO"
-    elif nota_final >= 5.0: status = "COMPETITIVO"
+    if nota_final >= 9.0: status = "NIVEL ELITE MUNDIAL"
+    elif nota_final >= 7.0: status = "RENDIMIENTO PRO"
+    elif nota_final >= 5.0: status = "NIVEL COMPETITIVO"
     else: status = "BAJO RENDIMIENTO"
-    st.markdown(f"<p style='margin-top:10px; font-weight:bold; letter-spacing:1px;'>SITUACIÓN: {status}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='margin-top:15px; font-weight:700; font-size:1.1rem;'>ESTADO: {status}</p>", unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
