@@ -5,7 +5,7 @@ st.set_page_config(page_title="LOXT Stats Calculator", page_icon="⚽", layout="
 
 # 2. SIDEBAR (Interruptor y Datos)
 with st.sidebar:
-    st.markdown("<h3 style='font-size:1rem; margin-bottom:10px;'>CONFIGURACIÓN</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='font-size:1.2rem; margin-bottom:10px;'>CONFIGURACIÓN</h3>", unsafe_allow_html=True)
     
     # Interruptor de Modo
     modo_oscuro = st.toggle("Modo Oscuro", value=True)
@@ -17,18 +17,20 @@ with st.sidebar:
     goles = st.number_input("Goles", min_value=0, step=1)
     asist = st.number_input("Asistencias", min_value=0, step=1)
 
-# 3. ESTILOS DINÁMICOS
+# 3. ESTILOS DINÁMICOS Y FIX DE CONTRASTE
 if modo_oscuro:
     bg_gradient = "linear-gradient(135deg, #001a33 0%, #004d40 100%)"
+    sidebar_bg = "#001a33" # Forzado para modo oscuro
     text_color_main = "#ffffff"
-    card_bg = "rgba(0, 0, 0, 0.3)"
+    card_bg = "rgba(0, 0, 0, 0.4)"
     metric_bg = "rgba(255, 255, 255, 0.08)"
     wave_color = "rgba(0,255,150,0.03)"
 else:
-    # Modo Claro: Pasteles cálidos (Amarillo/Rojizo)
+    # Modo Claro: Pasteles cálidos
     bg_gradient = "linear-gradient(135deg, #fff9c4 0%, #ffecb3 50%, #ffccbc 100%)"
+    sidebar_bg = "#fff9c4" # Forzado para modo claro
     text_color_main = "#2c3e50"
-    card_bg = "rgba(255, 255, 255, 0.5)"
+    card_bg = "rgba(255, 255, 255, 0.6)"
     metric_bg = "rgba(0, 0, 0, 0.05)"
     wave_color = "rgba(255, 100, 100, 0.05)"
 
@@ -36,11 +38,18 @@ st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
+    /* Fondo de la App */
     .stApp {{
         background: {bg_gradient};
         background-attachment: fixed;
     }}
     
+    /* FORZAR FONDO DE SIDEBAR (Esto arregla el problema en PC y Móvil) */
+    section[data-testid="stSidebar"] {{
+        background-color: {sidebar_bg} !important;
+    }}
+    
+    /* Ondas difuminadas */
     .stApp::before {{
         content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
         background: radial-gradient(circle at center, {wave_color} 0%, transparent 60%);
@@ -52,15 +61,17 @@ st.markdown(f"""
         to {{ transform: translate(5%, 5%) rotate(3deg); }}
     }}
 
-    /* Forzar colores de texto e inputs */
-    .stApp, p, span, label, h1, h3, div[data-testid="stMetricLabel"] > div {{
+    /* Forzar colores de texto en toda la interfaz */
+    .stApp, p, span, label, h1, h2, h3, 
+    div[data-testid="stMetricLabel"] > div, 
+    section[data-testid="stSidebar"] .stText {{
         color: {text_color_main} !important;
     }}
 
-    /* Ajuste de Cuadros de Métricas (Centralizados) */
+    /* Ajuste de Cuadros de Métricas */
     div[data-testid="stMetric"] {{
         background-color: {metric_bg} !important;
-        border: 1px solid rgba(0,0,0,0.1) !important;
+        border: 1px solid rgba(0,0,0,0.05) !important;
         border-radius: 12px !important;
         text-align: center !important;
         padding: 15px !important;
@@ -70,14 +81,11 @@ st.markdown(f"""
         color: {text_color_main} !important;
         font-weight: 800 !important; 
         font-size: 1.8rem !important;
-        display: flex;
-        justify-content: center;
+        display: flex; justify-content: center;
     }}
 
     div[data-testid="stMetricLabel"] > div {{
-        display: flex;
-        justify-content: center;
-        width: 100%;
+        display: flex; justify-content: center; width: 100%;
     }}
 
     .nota-card {{
