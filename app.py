@@ -1,97 +1,86 @@
 import streamlit as st
 
 # 1. CONFIGURACIÓN
-st.set_page_config(page_title="LOXT Pro Analyzer", page_icon="⚽", layout="centered")
+st.set_page_config(page_title="LOXT Street Stats", page_icon="⚽", layout="centered")
 
-# 2. CSS AVANZADO: Estilo Deep Blue & Cyber-Gothic
+# 2. CSS: Estilo Callejero / Dorsal de Fútbol
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=JetBrains+Mono:wght@400;700&display=swap');
+    /* Importar fuentes: Oswald para títulos y Stardos Stencil para el look callejero */
+    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Stardos+Stencil:wght@700&family=Bebas+Neue&display=swap');
 
-    /* Fondo principal: Degradado Azul Profundo con toque Aqua */
+    /* Fondo principal: Azul Profundo Gradual */
     .stApp {
-        background: radial-gradient(circle at top, #001a33 0%, #00050a 100%) !important;
+        background: linear-gradient(180deg, #001220 0%, #000000 100%) !important;
     }
 
-    /* Barra Lateral: Diseño Cyber-Gothic */
+    /* Barra Lateral: Más limpia, estilo "Vestuario" */
     [data-testid="stSidebar"] {
-        background-color: #000814 !important;
-        background-image: 
-            linear-gradient(30deg, #001a33 12%, transparent 12.5%, transparent 87%, #001a33 87.5%, #001a33),
-            linear-gradient(150deg, #001a33 12%, transparent 12.5%, transparent 87%, #001a33 87.5%, #001a33),
-            linear-gradient(30deg, #001a33 12%, transparent 12.5%, transparent 87%, #001a33 87.5%, #001a33),
-            linear-gradient(150deg, #001a33 12%, transparent 12.5%, transparent 87%, #001a33 87.5%, #001a33),
-            linear-gradient(60deg, #00264d 25%, transparent 25.5%, transparent 75%, #00264d 75%, #00264d),
-            linear-gradient(60deg, #00264d 25%, transparent 25.5%, transparent 75%, #00264d 75%, #00264d) !important;
-        background-size: 40px 70px !important;
-        border-right: 1px solid #004080;
+        background-color: #001a33 !important;
+        background-image: radial-gradient(#00264d 1px, transparent 1px) !important;
+        background-size: 20px 20px !important; /* Textura de puntos sutil */
+        border-right: 2px solid #0059b3;
     }
 
     /* Títulos */
     h1, h3 {
-        font-family: 'Oswald', sans-serif !important;
+        font-family: 'Bebas Neue', sans-serif !important;
         color: #ffffff !important;
-        text-transform: uppercase;
-        letter-spacing: 3px;
+        letter-spacing: 2px;
     }
 
-    /* Cuadros de Métricas: Glassmorphism con textura */
+    /* Cuadros de Métricas: Estilo Placa de Metal */
     div[data-testid="stMetric"] {
-        background: rgba(255, 255, 255, 0.03) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-left: 4px solid #0059b3 !important; /* Barra lateral decorativa */
-        border-radius: 4px !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 2px solid #ffffff !important;
+        border-radius: 0px !important; /* Cuadrados, más agresivos */
         padding: 15px !important;
-        box-shadow: 10px 10px 20px rgba(0,0,0,0.5);
-        backdrop-filter: blur(5px);
+        box-shadow: 5px 5px 0px #0059b3; /* Sombra sólida bloque */
     }
 
-    /* Números en Blanco Puro */
+    /* Números: ESTILO DORSAL/CALLEJERO (Sin puntos en el centro) */
     div[data-testid="stMetricValue"] > div {
-        font-family: 'JetBrains Mono', monospace !important;
-        font-size: 1.8rem !important;
+        font-family: 'Bebas Neue', sans-serif !important;
+        font-size: 3rem !important;
         color: #ffffff !important;
-        font-weight: 700 !important;
+        letter-spacing: 1px;
     }
 
     /* Etiquetas de métricas */
     div[data-testid="stMetricLabel"] > div {
-        color: #80b3ff !important;
+        color: #ffffff !important;
         font-family: 'Oswald', sans-serif !important;
         text-transform: uppercase;
+        opacity: 0.8;
     }
 
-    /* Nota Final Gigante */
-    .big-score {
-        font-family: 'Oswald', sans-serif !important;
-        font-size: 5rem !important;
+    /* Nota Final: Gigante estilo Graffiti/Dorsal */
+    .street-score {
+        font-family: 'Stardos Stencil', cursive !important;
+        font-size: 6rem !important;
         color: #ffffff !important;
-        line-height: 1;
-        margin: 10px 0;
-        text-shadow: 4px 4px 0px #003366;
+        text-shadow: 3px 3px 0px #0059b3, 6px 6px 0px #000;
+        margin: 0px;
     }
 
-    /* Línea divisoria técnica */
-    hr {
-        border: 0;
-        height: 2px;
-        background-image: linear-gradient(to right, transparent, #0059b3, transparent);
-        margin: 20px 0;
+    /* Inputs de la Sidebar */
+    .stNumberInput label, .stRadio label {
+        color: white !important;
+        font-family: 'Oswald', sans-serif !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. SIDEBAR (Data Entry)
+# 3. SIDEBAR (Data Entry Simplificado)
 with st.sidebar:
-    st.markdown("<h3>SYSTEM ACCESS</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#80b3ff; font-size:0.7rem;'>LOXT v3.0 // ANALYZER</p>", unsafe_allow_html=True)
-    modo = st.radio("PERIOD_SELECTOR:", ["Mensual", "Temporada"])
-    st.markdown("---")
-    pj = st.number_input("TOTAL_PJ", min_value=0, step=1)
-    goles = st.number_input("GOALS_COUNT", min_value=0, step=1)
-    asist = st.number_input("ASSISTS_COUNT", min_value=0, step=1)
+    st.markdown("<h3>CONFIGURACIÓN</h3>", unsafe_allow_html=True)
+    modo = st.radio("MODO DE JUEGO:", ["Mensual", "Temporada"])
+    st.markdown("<br>", unsafe_allow_html=True)
+    pj = st.number_input("PARTIDOS JUGADOS", min_value=0, step=1)
+    goles = st.number_input("GOLES", min_value=0, step=1)
+    asist = st.number_input("ASISTENCIAS", min_value=0, step=1)
 
-# 4. LÓGICA
+# 4. LÓGICA (Ley de Hierro)
 g_a_total = goles + asist
 if pj > 0 and g_a_total > 0:
     ga_rate = g_a_total / pj
@@ -106,23 +95,24 @@ else:
 
 # 5. MAIN INTERFACE
 st.title("LOXT PERFORMANCE HUB")
+st.markdown("<p style='color:grey; font-family:Oswald;'>CALCULADORA DE RENDIMIENTO CALLEJERO</p>", unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns(3)
 col1.metric("G/A RATE", f"{ga_rate:.2f}")
 col2.metric("BASE TPP", f"{min(tpp, 10.0):.1f}")
-col3.metric(f"BONUS ({modo[0]})", f"{bono:.2f}")
+col3.metric(f"BONO {modo[0]}", f"{bono:.2f}")
 
-st.markdown("<hr>", unsafe_allow_html=True)
+st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
 
 # Área de la Nota Final
 st.markdown("<center>", unsafe_allow_html=True)
-st.markdown(f"<p style='color:#80b3ff; letter-spacing:5px; margin:0;'>OVERALL RATING</p>", unsafe_allow_html=True)
-st.markdown(f'<div class="big-score">{nota_final:.1f}</div>', unsafe_allow_html=True)
+st.markdown(f"<p style='color:white; font-family:Bebas Neue; letter-spacing:4px; font-size:1.2rem;'>RATING FINAL</p>", unsafe_allow_html=True)
+st.markdown(f'<div class="street-score">{nota_final:.1f}</div>', unsafe_allow_html=True)
 
 if pj > 0:
-    if nota_final >= 9.0: status, color = "ELITE_CLASS", "#ffffff"
-    elif nota_final >= 7.0: status, color = "PRO_PERFORMANCE", "#80b3ff"
-    elif nota_final >= 5.0: status, color = "CORE_LEVEL", "#4d94ff"
-    else: status, color = "LOW_EFFICIENCY", "#ff4d4d"
-    st.markdown(f"<p style='color:{color}; font-family:JetBrains Mono; font-weight:bold;'>[ STATUS: {status} ]</p>", unsafe_allow_html=True)
+    if nota_final >= 9.0: status = "MVP / LEYENDA"
+    elif nota_final >= 7.0: status = "TITULAR PRO"
+    elif nota_final >= 5.0: status = "EN RACHA"
+    else: status = "BAJO NIVEL"
+    st.markdown(f"<h2 style='color:white; font-family:Bebas Neue;'>{status}</h2>", unsafe_allow_html=True)
 st.markdown("</center>", unsafe_allow_html=True)
