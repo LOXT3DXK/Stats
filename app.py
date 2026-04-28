@@ -1,7 +1,7 @@
 import streamlit as st
 
 # 1. CONFIGURACIÓN
-st.set_page_config(page_title="LOXT Stats Calculator", page_icon="⚽", layout="centered")
+st.set_page_config(page_title="Stats Lab Performance Tracker", page_icon="⚽", layout="centered")
 
 # 2. INICIALIZACIÓN
 if 'pj' not in st.session_state: st.session_state.pj = 0
@@ -61,11 +61,10 @@ if pj > 0:
                 next_info = f"Estás a {falta} pts del nivel {niveles[i-1][1]}"
             break
 
-# 6. ESTILOS CSS (MODO CLARO AZUL PASTEL)
+# 6. ESTILOS CSS (AZUL PASTEL PARA MODO CLARO)
 if modo_oscuro:
     bg, side, txt, card = ("linear-gradient(135deg, #001a33 0%, #004d40 100%)", "#001a33", "#ffffff", "rgba(0,0,0,0.4)")
 else:
-    # Paleta Azul Cielo / Pastel
     bg, side, txt, card = ("linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)", "#e3f2fd", "#01579b", "rgba(255,255,255,0.6)")
 
 st.markdown(f"""
@@ -92,7 +91,7 @@ st.markdown(f"""
     """, unsafe_allow_html=True)
 
 # 7. INTERFAZ PRINCIPAL
-st.markdown("<h1 style='text-align:center; letter-spacing: 3px; font-weight:900;'>LOXT CALCULATOR</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; letter-spacing: 1px; font-weight:900;'>Stats Lab Performance Tracker</h1>", unsafe_allow_html=True)
 
 c1, c2, c3 = st.columns(3)
 with c1: st.metric("G/A RATE", f"{ga_rate:.2f}")
